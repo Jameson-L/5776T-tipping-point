@@ -4,7 +4,7 @@
  * Contains common definitions and header files used throughout your PROS
  * project.
  *
- * Copyright (c) 2017-2022, Purdue University ACM SIGBots.
+ * Copyright (c) 2017-2021, Purdue University ACM SIGBots.
  * All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -39,8 +39,9 @@
 /**
  * You should add more #includes here
  */
-//#include "okapi/api.hpp"
+#include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
+using namespace okapi::literals; // units
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
