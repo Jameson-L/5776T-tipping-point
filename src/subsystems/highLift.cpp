@@ -27,7 +27,7 @@ const double kHighLiftMidTarget = 1350; // 1
 okapi::Motor highLift = okapi::Motor(kHighLiftLPort);
 
 // potentiometers
-okapi::Potentiometer highLiftLPot = okapi::Potentiometer(kHighLiftLPotPort);
+okapi::Potentiometer highLiftLPot = okapi::Potentiometer({2, kHighLiftLPotPort});
 // okapi::Potentiometer highLiftRPot = okapi::Potentiometer(kHighLiftRPotPort);
 
 // limit switches (maybe)

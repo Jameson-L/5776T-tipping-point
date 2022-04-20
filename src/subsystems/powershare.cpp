@@ -1,10 +1,10 @@
 #include "subsystems/powershare.hpp"
 
-const int8_t kConveyorPort = 21;
+const int8_t kPowersharePort = 21;
 
-okapi::Motor conveyorMotor = okapi::Motor(kConveyorPort);
+okapi::Motor powershare = okapi::Motor(kPowersharePort);
 
-okapi::Potentiometer powersharePot = okapi::Potentiometer(0);
+okapi::Potentiometer powersharePot = okapi::Potentiometer(2);
 
 okapi::IterativePosPIDController powersharePid = okapi::IterativeControllerFactory::posPID(0.002, 0, 0);
 const int powershareTarget = 0;

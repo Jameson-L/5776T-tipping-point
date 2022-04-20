@@ -7,9 +7,9 @@
 #include "autonomous/autonomous.hpp"
 #include "autonomous/odometry.hpp"
 
-#define kPneumaticClampPort 0
-#define kPneumaticTilterPort 0
-#define kPneumaticTransmissionPort 0
+#define kPneumaticClampPort 7
+#define kPneumaticTilterPort 6
+#define kPneumaticTransmissionPort 3
 // units
 // using namespace okapi::literals;
 
@@ -45,12 +45,12 @@ void initialize() {
 	okapi::Rate rate;
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Among.");
-	pros::c::adi_pin_mode(kPneumaticClampPort, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticTilterPort, OUTPUT);
+	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
+	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort, OUTPUT);
 	pros::c::adi_pin_mode(kPneumaticTransmissionPort, OUTPUT);
 	pros::lcd::register_btn1_cb(on_center_button);
-	// pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
-	// pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
+	// pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
+	// pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
 
 	// while (imu1.isCalibrating() || imu1.isCalibrating()) {
 	// 	pros::lcd::set_text(2, "Calibrating IMUs...");
@@ -114,10 +114,10 @@ void competition_initialize() {
 void autonomous() {
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-	// pros::c::adi_pin_mode(kPneumaticClampPort, OUTPUT);
-	// pros::c::adi_pin_mode(kPneumaticTilterPort, OUTPUT);
-	// pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
-	// pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
+	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort, OUTPUT);
+	// pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
+	// pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
 	// right();
 	// rightOne();
 	// rightAllianceWP();
@@ -184,15 +184,15 @@ void opcontrol() {
 
 	okapi::Rate rate;
 	if (controller[okapi::ControllerDigital::R1].isPressed()) {
-		pros::c::adi_digital_write(kPneumaticClampPort, LOW);
+		pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
 		highLiftToggle = 3;
 	} else {
-		pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
+		pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
 	}
 	if (controller[okapi::ControllerDigital::R2].isPressed()) {
-		pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
+		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
 	} else {
-		pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
 	}
 
 	// to stop auton tasks
@@ -276,12 +276,12 @@ void opcontrol() {
 		if(controller[okapi::ControllerDigital::R1].changedToPressed()) {
 			clampToggle = !clampToggle;
 				if (clampToggle) {
-					pros::c::adi_digital_write(kPneumaticClampPort, LOW);
+					pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
 					if (highLiftToggle == 0) {
 						highLiftToggle = 3;
 					}
 				} else {
-					pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
+					pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
 					if (highLiftToggle == 3) {
 						highLiftToggle = 0;
 					}
@@ -291,9 +291,9 @@ void opcontrol() {
 		if(controller[okapi::ControllerDigital::R2].changedToPressed()) {
 				lowLiftToggle = !lowLiftToggle;
 				if (lowLiftToggle) {
-					pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
+					pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
 				} else {
-					pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+					pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
 				}
 		}
 

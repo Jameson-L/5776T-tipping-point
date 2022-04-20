@@ -43,8 +43,8 @@ extern okapi::IterativePosPIDController chasissVisionPid;
 double getHeading(bool safe = false);
 bool isMoving();
 
-void odomDriveToPoint(double x, double y, bool forward=true, double offset = 0.0, double speedMultiplier = 1, double time = 4, bool persist = false, bool rush = false, bool useVision = false);
-void jCurve(double x, double y, bool forward=true, double offset = 0.0, double speedMultiplier = 1, double time = 4, bool persist = false, bool rush = false, bool useVision = false);
+void odomDriveToPoint(double x, double y, bool forward=true, double offset = 0.0, double speedMultiplier = 1, double time = 4, bool persist = false, bool rush = false, int useVision = 0);
+void jCurve(double x, double y, bool forward=true, double offset = 0.0, double speedMultiplier = 1, double time = 4, bool persist = false, bool rush = false, int useVision = 0);
 void imuTurnToAngle(double deg);
 void imuZeroToAngle(double deg, double time = 2);
 void relative(double x, double time = 2);
@@ -55,3 +55,4 @@ extern pros::vision_signature_s_t NEUTRAL;
 extern pros::vision_signature_s_t RED;
 extern pros::vision_signature_s_t BLUE;
 extern pros::Vision vision;
+extern pros::Vision vision2;

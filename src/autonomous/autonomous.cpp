@@ -4,9 +4,9 @@
 #include "subsystems/powershare.hpp"
 #include "autonomous/autonomous.hpp"
 
-#define kPneumaticClampPort 0
-#define kPneumaticTilterPort 0
-#define kPneumaticTransmissionPort 0
+#define kPneumaticClampPort 7
+#define kPneumaticTilterPort 6
+#define kPneumaticTransmissionPort 3
 
 // functions
 void highLiftTask(void* ignore) {
@@ -17,7 +17,7 @@ void giveUp() {
   continueHighLift = true;
   while (continueHighLift) {
     if (chassis->getState().x.convert(okapi::foot) >= 5.5) {
-      pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
+      pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
     }
   }
 }

@@ -3,27 +3,27 @@
 
 using namespace okapi::literals;
 
-uint8_t kLTrackingWheelPortA = 3;
-uint8_t kLTrackingWheelPortB = 4;
-uint8_t kRTrackingWheelPortA = 5;
-uint8_t kRTrackingWheelPortB = 6;
+uint8_t kLTrackingWheelPortA = 1;
+uint8_t kLTrackingWheelPortB = 2;
+uint8_t kRTrackingWheelPortA = 3;
+uint8_t kRTrackingWheelPortB = 4;
 // uint8_t kMTrackingWheelPortA = 3;
 // uint8_t kMTrackingWheelPortB = 4;
 
-uint8_t imu1Port = 19;
-uint8_t imu2Port = 0; // 6
+uint8_t imu1Port = 0;
+uint8_t imu2Port = 0;
 
 okapi::Rate rate;
 
-okapi::ADIEncoder LTrackingWheel = okapi::ADIEncoder(kLTrackingWheelPortA, kLTrackingWheelPortB, true);
-okapi::ADIEncoder RTrackingWheel = okapi::ADIEncoder(kRTrackingWheelPortA, kRTrackingWheelPortB, true);
+okapi::ADIEncoder LTrackingWheel = okapi::ADIEncoder({2, kLTrackingWheelPortA, kLTrackingWheelPortB}, true);
+okapi::ADIEncoder RTrackingWheel = okapi::ADIEncoder({2, kRTrackingWheelPortA, kRTrackingWheelPortB}, true);
 // okapi::ADIEncoder MTrackingWheel = okapi::ADIEncoder(kMTrackingWheelPortA, kMTrackingWheelPortB, true);
 
 okapi::IMU imu1 = okapi::IMU(imu1Port, okapi::IMUAxes::z);
 okapi::IMU imu2 = okapi::IMU(imu2Port, okapi::IMUAxes::x);
 
-okapi::MedianFilter<5> visionFilter;
-pros::Vision vision(1, pros::E_VISION_ZERO_CENTER);
+pros::Vision vision(15, pros::E_VISION_ZERO_CENTER);
+pros::Vision vision2(15, pros::E_VISION_ZERO_CENTER);
 pros::vision_signature_s_t NEUTRAL = pros::Vision::signature_from_utility(1, 1453, 1881, 1667, -4979, -4407, -4693, 3.000, 0);
 pros::vision_signature_s_t RED = pros::Vision::signature_from_utility(2, 8363, 9547, 8955, -927, -543, -735, 6.300, 0);
 pros::vision_signature_s_t BLUE = pros::Vision::signature_from_utility(3, -3225, -2877, -3051, 12239, 13155, 12697, 11.000, 0);
@@ -130,7 +130,7 @@ void odomDriveToPoint(double x, double y, bool forward, double offset, double sp
   jCurve(copyX, copyY, forward, offset, speedMultiplier, time, persist, rush, useVision);
 }
 
-void jCurve(double x, double y, bool forward, double offset, double speedMultiplier, double time, bool persist, bool rush, bool useVision) { // in feet, x is forward, y is sideways
+void jCurve(double x, double y, bool forward, double offset, double speedMultiplier, double time, bool persist, bool rush, int useVision) { // in feet, x is forward, y is sideways
   // std::cout << vision.get_object_count();
 
   double copyX = x;
@@ -179,8 +179,12 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     y = copyY - chassis->getState().y.convert(okapi::foot); // displacement y
 
 
-    if (useVision && vision.get_object_count() > 0) {
-      chassisPidValue2 = -1 * chassisVisionPid.step(visionFilter.filter(vision.get_by_size(0).x_middle_coord));
+    if (useVision > 0 && vision.get_object_count() > 0) {
+      if (useVision == 1) {
+        chassisPidValue2 = -1 * chassisVisionPid.step(visionFilter.filter(vision.get_by_size(0).x_middle_coord));
+      } else {
+        chassisPidValue2 = -1 * chassisVisionPid.step(visionFilter.filter(vision2.get_by_size(0).x_middle_coord));
+      }
     } else {
       double angle = atan(y / x) * 180 / M_PI; // absolute angle
       if (forward) {
@@ -337,6 +341,7 @@ void climb() {
 }
 
 void visionAlign() {
+  okapi::MedianFilter<5> visionFilter;
   vision.set_signature(1, &NEUTRAL);
 
   chassisVisionPid.setTarget(0);
