@@ -33,15 +33,9 @@ extern okapi::Motor highLift;
 extern okapi::Potentiometer highLiftLPot;
 extern okapi::Potentiometer highLiftRPot;
 
-// limit switches (maybe)
-extern okapi::ADIButton highLiftDownLimit;
-extern okapi::ADIButton highLiftUpLimit;
 
 // high lift PIDs
 extern okapi::IterativePosPIDController highLiftPid;
-
-// pneumatic
-extern pros::ADIDigitalOut clamp;
 
 extern bool continueHighLift;
 extern int state;

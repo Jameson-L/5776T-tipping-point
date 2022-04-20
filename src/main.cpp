@@ -3,12 +3,13 @@
 #include "autonomous/odometry.hpp"
 #include "subsystems/chassis.hpp"
 #include "subsystems/highLift.hpp"
-#include "subsystems/conveyor.hpp"
+#include "subsystems/powershare.hpp"
 #include "autonomous/autonomous.hpp"
 #include "autonomous/odometry.hpp"
 
-#define kPneumaticClawPort 7
-#define kPneumaticLiftPort 2
+#define kPneumaticClampPort 0
+#define kPneumaticTilterPort 0
+#define kPneumaticTransmissionPort 0
 // units
 // using namespace okapi::literals;
 
@@ -44,11 +45,12 @@ void initialize() {
 	okapi::Rate rate;
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Among.");
-	pros::c::adi_pin_mode(kPneumaticClawPort, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticLiftPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticClampPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticTilterPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticTransmissionPort, OUTPUT);
 	pros::lcd::register_btn1_cb(on_center_button);
-	pros::c::adi_digital_write(kPneumaticClawPort, HIGH);
-	pros::c::adi_digital_write(kPneumaticLiftPort, LOW);
+	// pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
+	// pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
 
 	// while (imu1.isCalibrating() || imu1.isCalibrating()) {
 	// 	pros::lcd::set_text(2, "Calibrating IMUs...");
@@ -112,10 +114,10 @@ void competition_initialize() {
 void autonomous() {
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-	pros::c::adi_pin_mode(kPneumaticClawPort, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticLiftPort, OUTPUT);
-	pros::c::adi_digital_write(kPneumaticClawPort, HIGH);
-	pros::c::adi_digital_write(kPneumaticLiftPort, HIGH);
+	// pros::c::adi_pin_mode(kPneumaticClampPort, OUTPUT);
+	// pros::c::adi_pin_mode(kPneumaticTilterPort, OUTPUT);
+	// pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
+	// pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
 	// right();
 	// rightOne();
 	// rightAllianceWP();
@@ -158,6 +160,7 @@ void opcontrol() {
 	okapi::Timer timer;
 
 	okapi::MedianFilter<10> highLiftFilter;
+	okapi::MedianFilter<10> lowLiftFilter;
 
 	// power variables
 	double leftY;
@@ -173,30 +176,28 @@ void opcontrol() {
 	bool lowLiftToggle = false;
 	bool highLiftOff = false;
 	int highLiftToggle = 0;
-	bool conveyorToggle = false;
-	bool conveyorToggle2 = false;
+	int powershareToggle = 0;
 	bool clampToggle = false;
-	bool rumble = true;
 	bool reset = true; // make sure u let go of both l1 and l2 after a double tap before trying to do either l1 or l2
-	bool wasDown = true;
 
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 
 	okapi::Rate rate;
 	if (controller[okapi::ControllerDigital::R1].isPressed()) {
-		pros::c::adi_digital_write(kPneumaticClawPort, LOW);
+		pros::c::adi_digital_write(kPneumaticClampPort, LOW);
 		highLiftToggle = 3;
 	} else {
-		pros::c::adi_digital_write(kPneumaticClawPort, HIGH);
+		pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
 	}
 	if (controller[okapi::ControllerDigital::R2].isPressed()) {
-		pros::c::adi_digital_write(kPneumaticLiftPort, LOW);
+		pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
 	} else {
-		pros::c::adi_digital_write(kPneumaticLiftPort, HIGH);
+		pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
 	}
 
 	// to stop auton tasks
 	continueHighLift = false;
+	continueLowLift = false;
 
 	rate.delay(40_Hz);
 
@@ -206,7 +207,7 @@ void opcontrol() {
 		// std::cout <<"running op control" << "\n";
 
 		// printing odometry tests
-		okapi::OdomState pos = chassis->getState();
+		// okapi::OdomState pos = chassis->getState();
 		// std::cout << "left: " << LTrackingWheel.controllerGet() << '\n';
 		// std::cout << "right: " << RTrackingWheel.controllerGet() << '\n';
 		// std::cout << "middle: " << MTrackingWheel.controllerGet() << '\n';
@@ -233,62 +234,35 @@ void opcontrol() {
 		// set power variables
 		leftY = controller.getAnalog(okapi::ControllerAnalog::leftY);
 		rightY = controller.getAnalog(okapi::ControllerAnalog::rightY);
-		// if (leftY != 0 && rightY != 0) {
-			// 	taskRunning = false;
-		// }
 
-
-		if (highLiftOff) {
-			highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-		} else {
-			highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-		}
 
 		// toggles
 		if(controller[okapi::ControllerDigital::A].changedToPressed()) {
 			highLiftOff = !highLiftOff;
 		}
 
-		if(controller[okapi::ControllerDigital::B].changedToPressed()) {
-			holdDrive = !holdDrive;
-			holdDrive ? controller.setText(0, 0, "hold ") : controller.setText(0, 0, "coast");
-		}
 		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == -1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == 1) {
 			holdDrive = false;
-			holdDrive ? controller.setText(0, 0, "hold ") : controller.setText(0, 0, "coast");
+			controller.setText(0, 0, "coast");
 		}
 		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == 1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == -1) {
 			holdDrive = true;
-			holdDrive ? controller.setText(0, 0, "hold ") : controller.setText(0, 0, "coast");
+			controller.setText(0, 0, "hold ");
 		}
 
 		if(controller[okapi::ControllerDigital::X].changedToPressed()) {
-			if (conveyorToggle2) {
-				conveyorToggle2 = false;
-				conveyorToggle = false;
+			if (powershareToggle == 1) {
+				powershareToggle = 0;
 			} else {
-				conveyorToggle = !conveyorToggle;
+				powershareToggle = 1;
 			}
 		}
 
 		if(controller[okapi::ControllerDigital::Y].changedToPressed()) {
-			if (!conveyorToggle) {
-				conveyorToggle = true;
-				conveyorToggle2 = true;
+			if (powershareToggle == 2) {
+				powershareToggle = 0;
 			} else {
-				conveyorToggle2 = !conveyorToggle2;
-			}
-		}
-
-		if (conveyorToggle) {
-			if (highLiftToggle == 0) {
-				wasDown = true;
-				highLiftToggle = 3;
-			}
-		} else {
-			if (wasDown) {
-				highLiftToggle = 0;
-				wasDown = false;
+				powershareToggle = 2;
 			}
 		}
 
@@ -298,30 +272,16 @@ void opcontrol() {
 		if(controller[okapi::ControllerDigital::down].changedToPressed()) {
 			highLiftToggle = 0;
 		}
-		/*
-		if(controller[okapi::ControllerDigital::left].changedToPressed()) {
-			pros::Task placeMogo(place);
-		}
-		if(controller[okapi::ControllerDigital::right].changedToPressed()) {
-			pros::Task tilterToFourbar(tilterToLift);
-			taskRunning = true;
-			if (!taskRunning) {
-				// pros::Task task_suspend(tilterToLift);
-				tilterToFourbar.suspend();
-				taskRunning = false;
-			}
-		}
-		// */
 
 		if(controller[okapi::ControllerDigital::R1].changedToPressed()) {
 			clampToggle = !clampToggle;
 				if (clampToggle) {
-					pros::c::adi_digital_write(kPneumaticClawPort, LOW);
+					pros::c::adi_digital_write(kPneumaticClampPort, LOW);
 					if (highLiftToggle == 0) {
 						highLiftToggle = 3;
 					}
 				} else {
-					pros::c::adi_digital_write(kPneumaticClawPort, HIGH);
+					pros::c::adi_digital_write(kPneumaticClampPort, HIGH);
 					if (highLiftToggle == 3) {
 						highLiftToggle = 0;
 					}
@@ -331,9 +291,9 @@ void opcontrol() {
 		if(controller[okapi::ControllerDigital::R2].changedToPressed()) {
 				lowLiftToggle = !lowLiftToggle;
 				if (lowLiftToggle) {
-					pros::c::adi_digital_write(kPneumaticLiftPort, LOW);
+					pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
 				} else {
-					pros::c::adi_digital_write(kPneumaticLiftPort, HIGH);
+					pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
 				}
 		}
 
@@ -346,8 +306,6 @@ void opcontrol() {
 			if (reset) {
 				highLiftToggle = 2;
 			}
-			// std::cout << vision.print_signature(NEUTRAL);
-			// std::cout << vision.get_object_count() << "\n";
 
 		} else if(controller[okapi::ControllerDigital::L2].changedToPressed()) {
 			highLiftOff = false;
@@ -362,41 +320,19 @@ void opcontrol() {
 			reset = true;
 		}
 
-		// partner controller
-		if (controller2[okapi::ControllerDigital::L1].changedToPressed() || controller2[okapi::ControllerDigital::R1].changedToPressed()) {
-			if (conveyorToggle2) {
-				conveyorToggle2 = false;
-				conveyorToggle = false;
-			} else {
-				conveyorToggle = !conveyorToggle;
-			}
-		}
-		if(controller2[okapi::ControllerDigital::L2].changedToPressed() || controller2[okapi::ControllerDigital::R2].changedToPressed()) {
-			if (!conveyorToggle) {
-				conveyorToggle = true;
-				conveyorToggle2 = true;
-			} else {
-				conveyorToggle2 = !conveyorToggle2;
-			}
-		}
-
 		// pid
 		if(highLiftToggle == 2) {
 			// up
 			highLiftPid.setTarget(kHighLiftUpTarget);
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.15 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 		} else if (highLiftToggle == 0) {
 			// down
 			highLiftPid.setTarget(kHighLiftDownTarget);
-			conveyorToggle = false;
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.1 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 		} else if (highLiftToggle == 3) {
 			// kinda down
 			highLiftPid.setTarget(kHighLiftHoldTarget);
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-			if (highLiftLPot.controllerGet() <= 1000) {
+			if (highLiftLPot.controllerGet() <= kHighLiftHoldTarget - 100) {
 				highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.09 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 				highLiftPidValue *= 3.5;
 			} else {
@@ -409,40 +345,36 @@ void opcontrol() {
 		} else {
 			// placing height
 			highLiftPid.setTarget(kHighLiftMidTarget);
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.15 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 		}
 
-		// set power
-		// if(highLiftToggle == 1 || highLiftToggle == 2){
-		// 	leftY = accelerationLimiter(leftY, lastLeftY, 0.01);
-		// 	rightY = accelerationLimiter(rightY, lastRightY, 0.01);
-		// 	lastLeftY = leftY;
-		// 	lastRightY = rightY;
-		// }
-		// if(!reverseDrive){
-		// if (!taskRunning) {
-			chassis->getModel()->tank(leftY, rightY);
-		// }
-		// } else {
-		// 	chassis->getModel()->tank(-rightY, -leftY);
-		// }
+		if (powershareToggle == 1) {
+			powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+			powersharePid.setTarget(powershareTarget);
+			powershare.controllerSet(powersharePid.step(lowLiftFilter.filter(powersharePot.controllerGet())));
+		} else if (powershareToggle == 2){
+			powershare.controllerSet(-1);
+		} else {
+			powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
+			powershare.controllerSet(0);
+		}
+
+		chassis->getModel()->tank(leftY, rightY);
+
 		if (holdDrive) {
+			pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
 			allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 		} else {
+			pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 			allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 		}
-		if (conveyorToggle) {
-			if (highLiftLPot.controllerGet() > 1000) {
-				conveyorMotor.controllerSet(conveyorToggle2 ? -1 : 1);
-			}
-		} else {
-			conveyorMotor.controllerSet(0);
-		}
-		highLiftOff = true;
+
+		// highLiftOff = true;
 		if (highLiftOff) {
+			highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 			highLift.controllerSet(0);
 		} else {
+			highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 			highLift.controllerSet(highLiftPidValue);
 		}
 

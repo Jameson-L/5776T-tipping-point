@@ -5,14 +5,11 @@
 // port numbers
 
 // const int8_t kHighLiftPort = 2;
-const int8_t kHighLiftLPort = -20; // -20
+const int8_t kHighLiftLPort = -19;
 // const int8_t kHighLiftRPort = -18;
 
 const int8_t kHighLiftLPotPort = 0; // 1
 // const int8_t kHighLiftRPotPort = 1;
-
-// const int8_t kHighLiftDownLimitPort;
-// const int8_t kHighLiftUpLimitPort;
 
 // position targets
 const double kHighLiftDownTarget = 940; // 0
@@ -63,7 +60,7 @@ void highTogglePosition() {
       // kinda down
 			highLiftPid.setTarget(kHighLiftHoldTarget);
 			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-			if (highLiftLPot.controllerGet() <= 1000) {
+      if (highLiftLPot.controllerGet() <= kHighLiftHoldTarget - 100) {
 				highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.09 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 				highLiftPidValue *= 3.5;
 			} else {

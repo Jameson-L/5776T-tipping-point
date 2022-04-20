@@ -5,12 +5,12 @@
 using namespace okapi::literals;
 
 // defining chassis ports, negative is reversed
-const int8_t kDriveLBPort = -11; // -11
-const int8_t kDriveLMPort = 10; // 3
-const int8_t kDriveLTPort = -16; // -10
-const int8_t kDriveRBPort = 3; // 6
-const int8_t kDriveRMPort = -9; // -19
-const int8_t kDriveRTPort = 8; // 9
+const int8_t kDriveLBPort = -6;
+const int8_t kDriveLMPort = 8;
+const int8_t kDriveLTPort = -9;
+const int8_t kDriveRBPort = 3; 
+const int8_t kDriveRMPort = -4;
+const int8_t kDriveRTPort = 5;
 
 // creating logger
 // auto logger = okapi::Logger::getDefaultLogger();
