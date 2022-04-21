@@ -54,5 +54,5 @@ extern okapi::ADIButton bumper;
 extern pros::vision_signature_s_t NEUTRAL;
 extern pros::vision_signature_s_t RED;
 extern pros::vision_signature_s_t BLUE;
-extern pros::Vision vision;
+extern pros::Vision vision1;
 extern pros::Vision vision2;

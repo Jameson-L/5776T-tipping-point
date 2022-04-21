@@ -12,6 +12,7 @@ extern okapi::Motor powershare;
 extern okapi::Potentiometer powersharePot;
 extern okapi::IterativePosPIDController powersharePid;
 extern const int powershareTarget;
+extern const int powershareTarget2;
 
 extern bool continueLowLift;
 extern int state2;

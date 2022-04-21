@@ -5,12 +5,12 @@
 using namespace okapi::literals;
 
 // defining chassis ports, negative is reversed
-const int8_t kDriveLBPort = -6;
-const int8_t kDriveLMPort = 8;
-const int8_t kDriveLTPort = -9;
-const int8_t kDriveRBPort = 3; 
-const int8_t kDriveRMPort = -4;
-const int8_t kDriveRTPort = 5;
+const int8_t kDriveLBPort = 6;
+const int8_t kDriveLMPort = -8;
+const int8_t kDriveLTPort = 9;
+const int8_t kDriveRBPort = -3;
+const int8_t kDriveRMPort = 4;
+const int8_t kDriveRTPort = -5;
 
 // creating logger
 // auto logger = okapi::Logger::getDefaultLogger();
@@ -21,7 +21,7 @@ std::shared_ptr<okapi::OdomChassisController> chassis = okapi::ChassisController
     {kDriveLBPort, kDriveLMPort, kDriveLTPort},
     {kDriveRBPort, kDriveRMPort, kDriveRTPort}
   )
-  .withDimensions(okapi::AbstractMotor::gearset::blue, okapi::ChassisScales({4._in, 13._in}, okapi::imev5BlueTPR * 7./3.))
+  .withDimensions(okapi::AbstractMotor::gearset::green, okapi::ChassisScales({3.25_in, 13._in}, okapi::imev5GreenTPR * 3./5.))
   .withSensors(LTrackingWheel, RTrackingWheel/*, MTrackingWheel*/)
-  .withOdometry({{2.75_in, 7.25_in}, okapi::quadEncoderTPR})
+  .withOdometry({{2.75_in, 6.75_in}, okapi::quadEncoderTPR})
   .buildOdometry();

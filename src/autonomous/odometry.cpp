@@ -10,19 +10,19 @@ uint8_t kRTrackingWheelPortB = 4;
 // uint8_t kMTrackingWheelPortA = 3;
 // uint8_t kMTrackingWheelPortB = 4;
 
-uint8_t imu1Port = 0;
+uint8_t imu1Port = 12;
 uint8_t imu2Port = 0;
 
 okapi::Rate rate;
 
-okapi::ADIEncoder LTrackingWheel = okapi::ADIEncoder({2, kLTrackingWheelPortA, kLTrackingWheelPortB}, true);
-okapi::ADIEncoder RTrackingWheel = okapi::ADIEncoder({2, kRTrackingWheelPortA, kRTrackingWheelPortB}, true);
+okapi::ADIEncoder LTrackingWheel = okapi::ADIEncoder({2, kLTrackingWheelPortA, kLTrackingWheelPortB}, false);
+okapi::ADIEncoder RTrackingWheel = okapi::ADIEncoder({2, kRTrackingWheelPortA, kRTrackingWheelPortB}, false);
 // okapi::ADIEncoder MTrackingWheel = okapi::ADIEncoder(kMTrackingWheelPortA, kMTrackingWheelPortB, true);
 
 okapi::IMU imu1 = okapi::IMU(imu1Port, okapi::IMUAxes::z);
 okapi::IMU imu2 = okapi::IMU(imu2Port, okapi::IMUAxes::x);
 
-pros::Vision vision(15, pros::E_VISION_ZERO_CENTER);
+pros::Vision vision1(15, pros::E_VISION_ZERO_CENTER);
 pros::Vision vision2(15, pros::E_VISION_ZERO_CENTER);
 pros::vision_signature_s_t NEUTRAL = pros::Vision::signature_from_utility(1, 1453, 1881, 1667, -4979, -4407, -4693, 3.000, 0);
 pros::vision_signature_s_t RED = pros::Vision::signature_from_utility(2, 8363, 9547, 8955, -927, -543, -735, 6.300, 0);
@@ -179,10 +179,10 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     y = copyY - chassis->getState().y.convert(okapi::foot); // displacement y
 
 
-    if (useVision > 0 && vision.get_object_count() > 0) {
-      if (useVision == 1) {
-        chassisPidValue2 = -1 * chassisVisionPid.step(visionFilter.filter(vision.get_by_size(0).x_middle_coord));
-      } else {
+    if (useVision > 0) {
+      if (useVision == 1 && vision1.get_object_count() > 0 && vision1.get_object_count() < 5) {
+        chassisPidValue2 = -1 * chassisVisionPid.step(visionFilter.filter(vision1.get_by_size(0).x_middle_coord));
+      } else if (useVision == 2 && vision2.get_object_count() > 0  && vision2.get_object_count() < 5){
         chassisPidValue2 = -1 * chassisVisionPid.step(visionFilter.filter(vision2.get_by_size(0).x_middle_coord));
       }
     } else {
@@ -342,19 +342,19 @@ void climb() {
 
 void visionAlign() {
   okapi::MedianFilter<5> visionFilter;
-  vision.set_signature(1, &NEUTRAL);
+  vision1.set_signature(1, &NEUTRAL);
 
   chassisVisionPid.setTarget(0);
   double chassisPidValue;
 
   // std::cout << (abs(vision.get_by_size(0).x_middle_coord) > 5 && isMoving());
-  while (abs(vision.get_by_size(0).x_middle_coord) > 0 || isMoving()) {
+  while (abs(vision1.get_by_size(0).x_middle_coord) > 0 || isMoving()) {
     // std::cout << vision.get_by_size(0).x_middle_coord << "\n";
-    chassisPidValue = chassisVisionPid.step(visionFilter.filter(vision.get_by_size(0).x_middle_coord));
+    chassisPidValue = chassisVisionPid.step(visionFilter.filter(vision1.get_by_size(0).x_middle_coord));
 
-    if (vision.get_object_count() == 0 || abs(chassisPidValue) < 0.08) {
+    if (vision1.get_object_count() == 0 || abs(chassisPidValue) < 0.08) {
       chassis->getModel()->tank(0, 0);
-    } else if (vision.get_object_count() > 0) {
+    } else if (vision1.get_object_count() > 0) {
       chassis->getModel()->tank(-1 * chassisPidValue, chassisPidValue);
     }
 

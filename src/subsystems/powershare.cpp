@@ -1,13 +1,14 @@
 #include "subsystems/powershare.hpp"
 
-const int8_t kPowersharePort = 21;
+const int8_t kPowersharePort = -21;
 
 okapi::Motor powershare = okapi::Motor(kPowersharePort);
 
 okapi::Potentiometer powersharePot = okapi::Potentiometer(2);
 
 okapi::IterativePosPIDController powersharePid = okapi::IterativeControllerFactory::posPID(0.002, 0, 0);
-const int powershareTarget = 0;
+const int powershareTarget = 3200;
+const int powershareTarget2 = 2080;
 
 bool continueLowLift = false;
 int state2 = 0;
