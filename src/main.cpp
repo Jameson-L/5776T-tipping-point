@@ -118,8 +118,8 @@ void autonomous() {
 	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
 	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort, OUTPUT);
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
-	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
-	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
+	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
+	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
 	// right();
 	// rightOne();
 	// rightAllianceWP();
@@ -129,8 +129,8 @@ void autonomous() {
 	// soloAWP();
 	//
 	// skills();
-	vision1.set_signature(1, &NEUTRAL);
-	jCurve(4, 0, true, 0, 1, 5, false, false, 1);
+	// vision1.set_signature(1, &NEUTRAL);
+	// jCurve(4, 0, true, 0, 1, 5, false, false, 1);
 }
 
 /**
@@ -171,11 +171,12 @@ void opcontrol() {
 	double rightY;
 
 	double highLiftPidValue;
+	highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 
 	// bool reverseDrive = false;
 	bool holdDrive = false;
-	bool lowLiftToggle = false;
-	bool highLiftOff = false;
+	bool lowLiftToggle = true;
+	bool lowLiftOff = false;
 	int highLiftToggle = 0;
 	int powershareToggle = 3;
 	bool clampToggle = false;
@@ -204,7 +205,7 @@ void opcontrol() {
 	// rate.delay(40_Hz);
 
 	// vision.set_signature(1, &NEUTRAL);
-	powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+	// powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 
 	while (true) {
 		// std::cout <<"running op control" << "\n";
@@ -241,7 +242,7 @@ void opcontrol() {
 
 		// toggles
 		if(controller[okapi::ControllerDigital::A].changedToPressed()) {
-			highLiftOff = !highLiftOff;
+			lowLiftOff = !lowLiftOff;
 		}
 
 		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == -1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == 1) {
@@ -254,14 +255,7 @@ void opcontrol() {
 		}
 
 		if(controller[okapi::ControllerDigital::X].changedToPressed()) {
-			if (powershareToggle == 1) {
-				powershareToggle = 0;
-			} else {
-				powershareToggle = 1;
-			}
-		}
-
-		if(controller[okapi::ControllerDigital::Y].changedToPressed()) {
+			lowLiftOff = false;
 			if (powershareToggle == 2) {
 				powershareToggle = 0;
 			} else {
@@ -269,12 +263,14 @@ void opcontrol() {
 			}
 		}
 
+		if(controller[okapi::ControllerDigital::Y].changedToPressed()) {
+			lowLiftOff = false;
+			powershareToggle = 1;
+		}
+
 		if(controller[okapi::ControllerDigital::B].changedToPressed()) {
-			if (powershareToggle == 3) {
-				powershareToggle = 0;
-			} else {
-				powershareToggle = 3;
-			}
+			lowLiftOff = false;
+			powershareToggle = 3;
 		}
 
 		if(controller[okapi::ControllerDigital::down].changedToPressed()) {
@@ -306,16 +302,13 @@ void opcontrol() {
 		}
 
 		if (controller[okapi::ControllerDigital::L1].isPressed() && controller[okapi::ControllerDigital::L2].isPressed()) {
-			highLiftOff = false;
 			highLiftToggle = 1;
 			reset = false;
 		} else if(controller[okapi::ControllerDigital::L1].changedToPressed()) {
-			highLiftOff = false;
 			if (reset) {
 				highLiftToggle = 2;
 			}
 		} else if(controller[okapi::ControllerDigital::L2].changedToPressed()) {
-			highLiftOff = false;
 			if (reset) {
 				if (clampToggle) {
 					highLiftToggle = 3;
@@ -351,24 +344,30 @@ void opcontrol() {
 			highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.15 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 		}
 
-		if (powershareToggle == 1) {
-			// powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-			powersharePid.setTarget(powershareTarget);
-			powershare.controllerSet(powersharePid.step(lowLiftFilter.filter(powersharePot.controllerGet())));
-		} else if (powershareToggle == 2){
-			// powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-			powershare.controllerSet(-1);
-		} else if (powershareToggle == 3){
-			// powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-			if (powersharePot.controllerGet() > powershareTarget2+50) {
+		if (lowLiftOff) {
+			powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
+			powershare.controllerSet(0);
+		} else {
+			if (powershareToggle == 1) {
+				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+				powersharePid.setTarget(powershareTarget);
+				powershare.controllerSet(powersharePid.step(lowLiftFilter.filter(powersharePot.controllerGet())));
+			} else if (powershareToggle == 2){
+				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 				powershare.controllerSet(-1);
+			} else if (powershareToggle == 3){
+				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+				if (powersharePot.controllerGet() > powershareTarget2+120) {
+					powershare.controllerSet(-1);
+				} else {
+					powershare.controllerSet(0);
+				}
 			} else {
+				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 				powershare.controllerSet(0);
 			}
-		} else {
-			// powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-			powershare.controllerSet(0);
 		}
+
 
 		chassis->getModel()->tank(leftY, rightY);
 
@@ -380,14 +379,8 @@ void opcontrol() {
 			allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 		}
 
-		// highLiftOff = true;
-		if (highLiftOff) {
-			highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-			highLift.controllerSet(0);
-		} else {
-			highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-			highLift.controllerSet(highLiftPidValue);
-		}
+		// lowLiftOff = true;
+		highLift.controllerSet(highLiftPidValue);
 
 		rate.delay(100_Hz);
 	}
