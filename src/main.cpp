@@ -191,6 +191,7 @@ void opcontrol() {
 	int highLiftToggle = 0;
 	int powershareToggle = 3;
 	bool clampToggle = false;
+	bool tiltToggle = false;
 	bool coverToggle = false;
 	bool reset = true; // make sure u let go of both l1 and l2 after a double tap before trying to do either l1 or l2
 
@@ -270,6 +271,7 @@ void opcontrol() {
 			if (powershareToggle == 2) {
 				powershareToggle = 0;
 			} else {
+				tiltToggle = true;
 				powershareToggle = 2;
 			}
 		}
@@ -277,6 +279,7 @@ void opcontrol() {
 		if(controller[okapi::ControllerDigital::Y].changedToPressed()) {
 			lowLiftOff = false;
 			powershareToggle = 1;
+			tiltToggle = false;
 		}
 
 		if(controller[okapi::ControllerDigital::B].changedToPressed()) {
@@ -284,7 +287,7 @@ void opcontrol() {
 			powershareToggle = 3;
 		}
 
-		if(controller[okapi::ControllerDigital::down].changedToPressed()) {
+		if(controller[okapi::ControllerDigital::up].changedToPressed()) {
 			coverToggle = !coverToggle;
 			if (coverToggle) {
 				pros::c::adi_digital_write(kPneumaticCoverPort, HIGH);
@@ -295,6 +298,19 @@ void opcontrol() {
 
 		if(controller[okapi::ControllerDigital::down].changedToPressed()) {
 			highLiftToggle = 0;
+		}
+
+		if(controller[okapi::ControllerDigital::left].changedToPressed()) {
+			tiltToggle = !tiltToggle;
+		}
+		if (tiltToggle) {
+			pros::c::adi_digital_write(kPneumaticTilterPort2, HIGH);
+		} else {
+			pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
+		}
+
+		if(controller[okapi::ControllerDigital::right].changedToPressed()) {
+			clampToggle = !clampToggle;
 		}
 
 		if(controller[okapi::ControllerDigital::R1].changedToPressed()) {
@@ -313,12 +329,16 @@ void opcontrol() {
 		}
 
 		if(controller[okapi::ControllerDigital::R2].changedToPressed()) {
-				lowLiftToggle = !lowLiftToggle;
-				if (lowLiftToggle) { // how the hell do you suspend the other task before running this task
-					pros::Task tiltTask(tilt);
-				} else {
-					pros::Task untiltTask(untilt);
-				}
+				lowLiftToggle = !lowLiftToggle; // true is clamped, false is not clamped
+		}
+		if (lowLiftToggle) { // clamped
+			if (!tiltToggle) { // if not tilted, just drop
+				pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
+			} else {
+				pros::Task untiltTask(untilt);
+			}
+		} else { // not clamped
+			pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
 		}
 
 		if (controller[okapi::ControllerDigital::L1].isPressed() && controller[okapi::ControllerDigital::L2].isPressed()) {
