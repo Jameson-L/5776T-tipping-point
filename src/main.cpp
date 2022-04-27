@@ -8,8 +8,10 @@
 #include "autonomous/odometry.hpp"
 
 #define kPneumaticClampPort 7
-#define kPneumaticTilterPort 6
+#define kPneumaticTilterPort 1
+#define kPneumaticTilterPort2 6
 #define kPneumaticTransmissionPort 3
+#define kPneumaticCoverPort 4
 // units
 // using namespace okapi::literals;
 
@@ -48,8 +50,12 @@ void initialize() {
 	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
 	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort, OUTPUT);
 	pros::c::adi_pin_mode(kPneumaticTransmissionPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticTilterPort2, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticCoverPort, OUTPUT);
 	pros::lcd::register_btn1_cb(on_center_button);
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
+	pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
 	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
 	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
 
@@ -117,9 +123,14 @@ void autonomous() {
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
 	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticTransmissionPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticTilterPort2, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticCoverPort, OUTPUT);
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
 	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
+	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
+	pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
 	// right();
 	// rightOne();
 	// rightAllianceWP();
@@ -180,6 +191,7 @@ void opcontrol() {
 	int highLiftToggle = 0;
 	int powershareToggle = 3;
 	bool clampToggle = false;
+	bool coverToggle = false;
 	bool reset = true; // make sure u let go of both l1 and l2 after a double tap before trying to do either l1 or l2
 
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
@@ -193,10 +205,13 @@ void opcontrol() {
 	}
 	if (controller[okapi::ControllerDigital::R2].isPressed()) {
 		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
+		pros::c::adi_digital_write(kPneumaticTilterPort2, HIGH);
 	} else {
 		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
+		pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
 	}
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 
 	// to stop auton tasks
 	continueHighLift = false;
@@ -245,13 +260,9 @@ void opcontrol() {
 			lowLiftOff = !lowLiftOff;
 		}
 
-		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == -1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == 1) {
-			holdDrive = false;
-			controller.setText(0, 0, "coast");
-		}
 		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == 1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == -1) {
-			holdDrive = true;
-			controller.setText(0, 0, "hold ");
+			holdDrive = !holdDrive;
+			holdDrive ? controller.setText(0, 0, "hold") : controller.setText(0, 0, "coast");
 		}
 
 		if(controller[okapi::ControllerDigital::X].changedToPressed()) {
@@ -271,6 +282,15 @@ void opcontrol() {
 		if(controller[okapi::ControllerDigital::B].changedToPressed()) {
 			lowLiftOff = false;
 			powershareToggle = 3;
+		}
+
+		if(controller[okapi::ControllerDigital::down].changedToPressed()) {
+			coverToggle = !coverToggle;
+			if (coverToggle) {
+				pros::c::adi_digital_write(kPneumaticCoverPort, HIGH);
+			} else {
+				pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
+			}
 		}
 
 		if(controller[okapi::ControllerDigital::down].changedToPressed()) {
@@ -294,10 +314,10 @@ void opcontrol() {
 
 		if(controller[okapi::ControllerDigital::R2].changedToPressed()) {
 				lowLiftToggle = !lowLiftToggle;
-				if (lowLiftToggle) {
-					pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
+				if (lowLiftToggle) { // how the hell do you suspend the other task before running this task
+					pros::Task tiltTask(tilt);
 				} else {
-					pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
+					pros::Task untiltTask(untilt);
 				}
 		}
 

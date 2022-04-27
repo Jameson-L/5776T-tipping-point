@@ -8,8 +8,9 @@
 // functions
 // we can add other versions if necessary
 void tilterToLift();
-extern bool taskRunning;
 void place();
+void tilt();
+void untilt();
 
 void left();
 void leftOne();
