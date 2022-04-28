@@ -47,17 +47,19 @@ void initialize() {
 	okapi::Rate rate;
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Among.");
-	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
-	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticTransmissionPort, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticTilterPort2, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticCoverPort, OUTPUT);
 	pros::lcd::register_btn1_cb(on_center_button);
+
+	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticTilterPort, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticTransmissionPort, OUTPUT);
+	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort2, OUTPUT);
+	pros::c::adi_pin_mode(kPneumaticCoverPort, OUTPUT);
+
+	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
+	pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
-	pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
-	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
-	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
 
 	// while (imu1.isCalibrating() || imu1.isCalibrating()) {
 	// 	pros::lcd::set_text(2, "Calibrating IMUs...");
@@ -121,18 +123,8 @@ void competition_initialize() {
 void autonomous() {
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-	pros::c::ext_adi_pin_mode(2, kPneumaticClampPort, OUTPUT);
-	pros::c::ext_adi_pin_mode(2, kPneumaticTilterPort, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticTransmissionPort, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticTilterPort2, OUTPUT);
-	pros::c::adi_pin_mode(kPneumaticCoverPort, OUTPUT);
-	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
-	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
-	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
-	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
-	pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
 	// right();
-	// rightOne();
+	rightOne();
 	// rightAllianceWP();
 	// left();
 	// leftOne();
@@ -140,8 +132,6 @@ void autonomous() {
 	// soloAWP();
 	//
 	// skills();
-	// vision1.set_signature(1, &NEUTRAL);
-	// jCurve(4, 0, true, 0, 1, 5, false, false, 1);
 }
 
 /**
@@ -205,11 +195,11 @@ void opcontrol() {
 		pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
 	}
 	if (controller[okapi::ControllerDigital::R2].isPressed()) {
-		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, HIGH);
-		pros::c::adi_digital_write(kPneumaticTilterPort2, HIGH);
+		pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 	} else {
-		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort, LOW);
-		pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
+		pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
+		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
 	}
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
@@ -261,9 +251,13 @@ void opcontrol() {
 			lowLiftOff = !lowLiftOff;
 		}
 
+		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == -1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == 1) {
+			holdDrive = false;
+			controller.setText(0, 0, "coast");
+		}
 		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == 1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == -1) {
-			holdDrive = !holdDrive;
-			holdDrive ? controller.setText(0, 0, "hold") : controller.setText(0, 0, "coast");
+			holdDrive = true;
+			controller.setText(0, 0, "hold ");
 		}
 
 		if(controller[okapi::ControllerDigital::X].changedToPressed()) {
@@ -304,9 +298,9 @@ void opcontrol() {
 			tiltToggle = !tiltToggle;
 		}
 		if (tiltToggle) {
-			pros::c::adi_digital_write(kPneumaticTilterPort2, HIGH);
+			pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 		} else {
-			pros::c::adi_digital_write(kPneumaticTilterPort2, LOW);
+			pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
 		}
 
 		if(controller[okapi::ControllerDigital::right].changedToPressed()) {
@@ -330,16 +324,18 @@ void opcontrol() {
 
 		if(controller[okapi::ControllerDigital::R2].changedToPressed()) {
 				lowLiftToggle = !lowLiftToggle; // true is clamped, false is not clamped
+				if (lowLiftToggle) { // clamped
+					if (!tiltToggle) { // if not tilted, just drop
+						pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
+					} else {
+						tiltToggle = false;
+						pros::Task untiltTask(untilt);
+					}
+				} else { // not clamped
+					pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+				}
 		}
-		if (lowLiftToggle) { // clamped
-			if (!tiltToggle) { // if not tilted, just drop
-				pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
-			} else {
-				pros::Task untiltTask(untilt);
-			}
-		} else { // not clamped
-			pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
-		}
+
 
 		if (controller[okapi::ControllerDigital::L1].isPressed() && controller[okapi::ControllerDigital::L2].isPressed()) {
 			highLiftToggle = 1;
@@ -372,9 +368,9 @@ void opcontrol() {
 		} else if (highLiftToggle == 3) {
 			// kinda down
 			highLiftPid.setTarget(kHighLiftHoldTarget);
-			if (highLiftLPot.controllerGet() <= kHighLiftHoldTarget - 100) {
+			if (highLiftLPot.controllerGet() <= kHighLiftHoldTarget-20) {
 				highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.09 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-				highLiftPidValue *= 3.5;
+				highLiftPidValue *= 3;
 			} else {
 				highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.09 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			}
