@@ -184,7 +184,7 @@ void opcontrol() {
 	bool tiltToggle = false;
 	bool coverToggle = false;
 	bool reset = true; // make sure u let go of both l1 and l2 after a double tap before trying to do either l1 or l2
-	bool wasDown = true;
+	bool wasDown = false; // true in old code????
 
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	okapi::Rate rate;
