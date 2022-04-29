@@ -184,9 +184,9 @@ void opcontrol() {
 	bool tiltToggle = false;
 	bool coverToggle = false;
 	bool reset = true; // make sure u let go of both l1 and l2 after a double tap before trying to do either l1 or l2
+	bool wasDown = true;
 
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
-
 	okapi::Rate rate;
 	if (controller[okapi::ControllerDigital::R1].isPressed()) {
 		pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
@@ -249,6 +249,10 @@ void opcontrol() {
 		// toggles
 		if(controller[okapi::ControllerDigital::A].changedToPressed()) {
 			lowLiftOff = !lowLiftOff;
+			if (lowLiftOff && wasDown) {
+				highLiftToggle = 0;
+				wasDown = false;
+			}
 		}
 
 		if (controller.getAnalog(okapi::ControllerAnalog::leftX) == -1 && controller.getAnalog(okapi::ControllerAnalog::rightX) == 1) {
@@ -264,9 +268,17 @@ void opcontrol() {
 			lowLiftOff = false;
 			if (powershareToggle == 2) {
 				powershareToggle = 0;
+				if (wasDown) {
+					highLiftToggle = 0;
+					wasDown = false;
+				}
 			} else {
 				tiltToggle = true;
 				powershareToggle = 2;
+				if (highLiftToggle == 0) {
+					wasDown = true;
+					highLiftToggle = 3;
+				}
 			}
 		}
 
@@ -274,11 +286,19 @@ void opcontrol() {
 			lowLiftOff = false;
 			powershareToggle = 1;
 			tiltToggle = false;
+			if (highLiftToggle == 0) {
+				wasDown = true;
+				highLiftToggle = 3;
+			}
 		}
 
 		if(controller[okapi::ControllerDigital::B].changedToPressed()) {
 			lowLiftOff = false;
 			powershareToggle = 3;
+			if (highLiftToggle == 0) {
+				wasDown = true;
+				highLiftToggle = 3;
+			}
 		}
 
 		if(controller[okapi::ControllerDigital::up].changedToPressed()) {
@@ -384,21 +404,23 @@ void opcontrol() {
 			powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 			powershare.controllerSet(0);
 		} else {
-			if (powershareToggle == 1) {
-				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-				powersharePid.setTarget(powershareTarget);
-				powershare.controllerSet(powersharePid.step(lowLiftFilter.filter(powersharePot.controllerGet())));
-			} else if (powershareToggle == 2){
-				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-				powershare.controllerSet(-1);
-			} else if (powershareToggle == 3){
-				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-				if (powersharePot.controllerGet() > powershareTarget2+120) { // tune this number maybe
+			if (highLiftLPot.controllerGet() > kHighLiftHoldTarget-100) {
+				if (powershareToggle == 1) {
+					powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+					powersharePid.setTarget(powershareTarget);
+					powershare.controllerSet(powersharePid.step(lowLiftFilter.filter(powersharePot.controllerGet())));
+				} else if (powershareToggle == 2){
+					powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 					powershare.controllerSet(-1);
-				} else {
-					powershare.controllerSet(0);
+				} else if (powershareToggle == 3){
+					powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+					if (powersharePot.controllerGet() > powershareTarget2+120) { // tune this number maybe
+						powershare.controllerSet(-1);
+					} else {
+						powershare.controllerSet(0);
+					}
 				}
-			} else {
+			}	else {
 				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 				powershare.controllerSet(0);
 			}

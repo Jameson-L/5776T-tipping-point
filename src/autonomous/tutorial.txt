@@ -38,9 +38,19 @@ run this task so the bot lets go of the mogo before being dragged to the other s
 
 pros::Task highLift(highLiftTask);
 run this to turn on the fourbar; if you set continueHighLift = false, u have to restart the tasks
+state:
+0 down
+1 mid
+2 high
+3 hold
 
 pros::Task lowLift(lowLiftTask);
 literally the same thing
+state2:
+0 unpowered
+1 up
+2 conveyor running
+3 down
 
 
 pneumatic pain:
