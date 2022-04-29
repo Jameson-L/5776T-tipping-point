@@ -57,7 +57,7 @@ void initialize() {
 
 	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
 	pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
-	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
+	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 
@@ -196,10 +196,10 @@ void opcontrol() {
 	}
 	if (controller[okapi::ControllerDigital::R2].isPressed()) {
 		pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
-		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
+		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
 	} else {
 		pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
-		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
+		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 	}
 	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
@@ -298,9 +298,9 @@ void opcontrol() {
 			tiltToggle = !tiltToggle;
 		}
 		if (tiltToggle) {
-			pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
-		} else {
 			pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
+		} else {
+			pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 		}
 
 		if(controller[okapi::ControllerDigital::right].changedToPressed()) {
@@ -393,7 +393,7 @@ void opcontrol() {
 				powershare.controllerSet(-1);
 			} else if (powershareToggle == 3){
 				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-				if (powersharePot.controllerGet() > powershareTarget2+120) {
+				if (powersharePot.controllerGet() > powershareTarget2+120) { // tune this number maybe
 					powershare.controllerSet(-1);
 				} else {
 					powershare.controllerSet(0);

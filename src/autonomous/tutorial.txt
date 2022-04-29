@@ -1,0 +1,64 @@
+hi shubham
+
+movement functions:
+
+void odomDriveToPoint(double x, double y, bool forward=true, double offset = 0.0, double speedMultiplier = 1, double time = 4, bool persist = false, bool rush = false, int useVision = 0);
+x is forward/backward
+y is left/right
+forward is default to true
+offset: try to avoid using this; it doesnt work with jcurve if its negative; ONLY use it IF you are OVERSHOOTING by a little bit and want to save time by just cutting the distance without recalculating coordinates
+speedMultiplier is max speed
+time is max time in seconds
+persist is for use in auton; enabling it causes the bot to switch to torque and back up when encountering resistance
+rush is for use in auton; enabling it will cause it to go at full speed and stop instantly when reaching target OR when bumper is pressed
+useVision: 0 is off, 1 is front vision, 2 is back vision
+
+void jCurve(double x, double y, bool forward=true, double offset = 0.0, double speedMultiplier = 1, double time = 4, bool persist = false, bool rush = false, int useVision = 0);
+same thing but jCurve
+
+void imuTurnToAngle(double deg);
+you literally wrote this
+
+void imuZeroToAngle(double deg, double time = 2);
+hi
+
+void relative(double x, double time = 2);
+relative forward/backward movement
+
+void climb();
+irrelevant now
+
+void visionAlign();
+i just used this to test, not needed in actual code
+
+
+tasks and other shit:
+pros::Task giveUpTask(giveUp);
+run this task so the bot lets go of the mogo before being dragged to the other side
+
+pros::Task highLift(highLiftTask);
+run this to turn on the fourbar; if you set continueHighLift = false, u have to restart the tasks
+
+pros::Task lowLift(lowLiftTask);
+literally the same thing
+
+
+pneumatic pain:
+kPneumaticClampPort 7 is on expander (HIGH is clamp, LOW is unclamp)
+kPneumaticTilterPort 1 is not (clamp of tilter) (HIGH is clamp, LOW is unclamp)
+kPneumaticTilterPort2 6 is on expander (tilt of tilter) (HIGH is tilt, LOW is untilt)
+kPneumaticTransmissionPort 3 is not (HIGH is torque, LOW is speed)
+kPneumaticCoverPort 4 is not (HIGH is down, LOW is up)
+
+example usage:
+pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
+pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
+pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
+
+notes:
+there is some random bullshit (bad coding) in the toggleposition code where i check if the position is within a certain distance from the target (such as the one in the powersharetoggle line 30 of powershare.cpp)
+if needed, tune this but also change it in main.cpp (skull emoji moment)
+
+you might wanna put pneumatic actuations in the actual autonomous.cpp funciton (at the beginning) and theres other stuff like setting brakemode to hold for all motors, just so ur bot starts in the correct configuration

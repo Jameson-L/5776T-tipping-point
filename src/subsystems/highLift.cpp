@@ -49,35 +49,25 @@ void highTogglePosition() {
     if(state == 2) {
 			// up
 			highLiftPid.setTarget(kHighLiftUpTarget);
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.15 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 		} else if (state == 0) {
 			// down
 			highLiftPid.setTarget(kHighLiftDownTarget);
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.1 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 		} else if (state == 3) {
-      // kinda down
+			// kinda down
 			highLiftPid.setTarget(kHighLiftHoldTarget);
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-      if (highLiftLPot.controllerGet() <= kHighLiftHoldTarget - 100) {
+			if (highLiftLPot.controllerGet() <= kHighLiftHoldTarget-20) {
 				highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.09 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-				highLiftPidValue *= 3.5;
+				highLiftPidValue *= 3;
 			} else {
 				highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.09 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			}
-		} else if (state == 1){
+		} else {
 			// placing height
 			highLiftPid.setTarget(kHighLiftMidTarget);
-			// highLiftPidValue = highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
 			highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.15 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-		} else if (state == 5){
-      highLiftPid.setTarget(kHighLiftMidTarget+240);
-      highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.15 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-    } else {
-      highLiftPid.setTarget(kHighLiftMaxTarget);
-      highLiftPidValue = std::abs(highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()))) < 0.15 ? 0 : highLiftPid.step(highLiftFilter.filter(highLiftLPot.controllerGet()));
-    }
+		}
       highLift.controllerSet(highLiftPidValue);
     }
     highLift.controllerSet(0);

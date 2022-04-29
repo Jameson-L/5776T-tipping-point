@@ -13,7 +13,7 @@
 /*
 pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
 pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
-pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
+pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 */
@@ -22,6 +22,10 @@ pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 void highLiftTask(void* ignore) {
   continueHighLift = true;
   highTogglePosition();
+}
+void lowLiftTask(void* ignore) {
+  continueLowLift = true;
+  lowTogglePosition();
 }
 void giveUp() {
   continueHighLift = true;
@@ -34,10 +38,10 @@ void giveUp() {
 void tilt() {
   pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
   pros::delay(500);
-  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
+  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
 }
 void untilt() {
-  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
+  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
   pros::delay(500);
   pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
 }

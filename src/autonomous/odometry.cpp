@@ -3,6 +3,12 @@
 
 using namespace okapi::literals;
 
+#define kPneumaticClampPort 7
+#define kPneumaticTilterPort 1
+#define kPneumaticTilterPort2 6
+#define kPneumaticTransmissionPort 3
+#define kPneumaticCoverPort 4
+
 uint8_t kLTrackingWheelPortA = 1;
 uint8_t kLTrackingWheelPortB = 2;
 uint8_t kRTrackingWheelPortA = 3;
@@ -164,7 +170,12 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
       if (persist) { // if it should keep going
         okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
         while (allMotors.getEfficiency() < 50) {
-          chassis->getModel()->tank(-1, -1);
+          pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
+          if (chassisPidValue > 0) {
+            chassis->getModel()->tank(1, 1);
+          } else {
+            chassis->getModel()->tank(-1, -1);
+          }
         }
       }
       break; // otherwise, just break normally
@@ -248,6 +259,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     rate.delay(100_Hz);
     }
 
+  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW); // switch back to speed 
   chassisDrivePid.reset();
   chassisTurnPid.reset();
   chassisVisionPid.reset();
