@@ -323,9 +323,9 @@ void opcontrol() {
 			pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 		}
 
-		if(controller[okapi::ControllerDigital::right].changedToPressed()) {
-			clampToggle = !clampToggle;
-		}
+		// if(controller[okapi::ControllerDigital::right].changedToPressed()) {
+		// 	clampToggle = !clampToggle;
+		// }
 
 		if(controller[okapi::ControllerDigital::R1].changedToPressed()) {
 			clampToggle = !clampToggle;
