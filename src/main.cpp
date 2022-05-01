@@ -419,8 +419,11 @@ void opcontrol() {
 					} else {
 						powershare.controllerSet(0);
 					}
+				} else {
+					powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
+					powershare.controllerSet(0);
 				}
-			}	else {
+			} else {
 				powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 				powershare.controllerSet(0);
 			}
