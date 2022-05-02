@@ -13,7 +13,7 @@ const int8_t kHighLiftLPotPort = 5; // 1
 
 // position targets
 const double kHighLiftDownTarget = 260; // 0
-const double kHighLiftHoldTarget = 420; // 3
+const double kHighLiftHoldTarget = 470; // 3
 const double kHighLiftUpTarget = 1475; // 2
 const double kHighLiftMaxTarget = 1475; // 4
 const double kHighLiftMidTarget = 800; // 1

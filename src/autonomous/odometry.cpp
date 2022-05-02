@@ -16,7 +16,7 @@ uint8_t kRTrackingWheelPortB = 4;
 // uint8_t kMTrackingWheelPortA = 3;
 // uint8_t kMTrackingWheelPortB = 4;
 
-uint8_t imu1Port = 12;
+uint8_t imu1Port = 16;
 uint8_t imu2Port = 0;
 
 okapi::Rate rate;
@@ -56,7 +56,7 @@ bool isMoving() {
   abs(okapi::Motor(kDriveLTPort).getActualVelocity()) +
   abs(okapi::Motor(kDriveRBPort).getActualVelocity()) +
   abs(okapi::Motor(kDriveRMPort).getActualVelocity()) +
-  abs(okapi::Motor(kDriveRTPort).getActualVelocity()) > 24;
+  abs(okapi::Motor(kDriveRTPort).getActualVelocity()) > 10;
 };
 
 void imuTurnToAngle(double deg) {
@@ -112,7 +112,7 @@ void imuZeroToAngle(double deg, double time){
   chassis->setState({chassis->getState().x, chassis->getState().y, getHeading(false) * okapi::degree});
 }
 
-void odomDriveToPoint(double x, double y, bool forward, double offset, double speedMultiplier, double time, bool persist, bool rush, bool useVision) { // in feet, x is forward, y is sideways
+void odomDriveToPoint(double x, double y, bool forward, double offset, double speedMultiplier, double time, bool persist, bool rush, int useVision) { // in feet, x is forward, y is sideways
   double copyX = x;
   double copyY = y;
   // turn first
@@ -169,7 +169,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     if (timer.millis().convert(okapi::second) - init > time) {
       if (persist) { // if it should keep going
         okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
-        while (allMotors.getEfficiency() < 50) {
+        while (allMotors.getEfficiency() < 25) {
           pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
           if (chassisPidValue > 0) {
             chassis->getModel()->tank(1, 1);
@@ -181,7 +181,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
       break; // otherwise, just break normally
     }
     if (rush) {
-      if (bumper.isPressed() || (abs(target - encoderReading) < 0.25)) {
+      if (/*bumper.isPressed() || */(abs(target - encoderReading) < 0.25)) {
         // std::cout << bumper.isPressed() << "\n";
         break;
       }
@@ -259,7 +259,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     rate.delay(100_Hz);
     }
 
-  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW); // switch back to speed 
+  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW); // switch back to speed
   chassisDrivePid.reset();
   chassisTurnPid.reset();
   chassisVisionPid.reset();

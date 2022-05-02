@@ -123,8 +123,8 @@ void competition_initialize() {
 void autonomous() {
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-	// right();
-	rightOne();
+	right();
+	// rightOne();
 	// rightAllianceWP();
 	// left();
 	// leftOne();
@@ -176,7 +176,7 @@ void opcontrol() {
 
 	// bool reverseDrive = false;
 	bool holdDrive = false;
-	bool lowLiftToggle = true;
+	bool lowLiftToggle = false;
 	bool lowLiftOff = false;
 	int highLiftToggle = 0;
 	int powershareToggle = 3;
@@ -190,11 +190,14 @@ void opcontrol() {
 	okapi::Rate rate;
 	if (controller[okapi::ControllerDigital::R1].isPressed()) {
 		pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
+		clampToggle = false;
 		highLiftToggle = 3;
 	} else {
 		pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
 	}
 	if (controller[okapi::ControllerDigital::R2].isPressed()) {
+		tiltToggle = true;
+		lowLiftToggle = false;
 		pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
 		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
 	} else {
@@ -312,6 +315,9 @@ void opcontrol() {
 
 		if(controller[okapi::ControllerDigital::down].changedToPressed()) {
 			highLiftToggle = 0;
+			if (powershareToggle == 2) {
+				powershareToggle = 0;
+			}
 		}
 
 		if(controller[okapi::ControllerDigital::left].changedToPressed()) {
@@ -336,6 +342,9 @@ void opcontrol() {
 					}
 				} else {
 					pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
+					if (powershareToggle == 2) {
+						powershareToggle = 0;
+					}
 					if (highLiftToggle == 3) {
 						highLiftToggle = 0;
 					}
@@ -344,7 +353,7 @@ void opcontrol() {
 
 		if(controller[okapi::ControllerDigital::R2].changedToPressed()) {
 				lowLiftToggle = !lowLiftToggle; // true is clamped, false is not clamped
-				if (lowLiftToggle) { // clamped
+				if (!lowLiftToggle) { // clamped
 					if (!tiltToggle) { // if not tilted, just drop
 						pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
 					} else {
