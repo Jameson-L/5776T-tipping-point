@@ -123,8 +123,8 @@ void competition_initialize() {
 void autonomous() {
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-	right();
-	// rightOne();
+	// right();
+	rightOne();
 	// rightAllianceWP();
 	// left();
 	// leftOne();

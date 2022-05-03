@@ -151,7 +151,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
   }
   chassisDrivePid.setTarget(target);
 
-  double chassisPidValue; // drive
+  double chassisPidValue = 0; // drive
   double chassisPidValue2; // turn
   double dX, dY; // current displacement
   double encoderReading = 1000000000.0;
@@ -169,7 +169,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     if (timer.millis().convert(okapi::second) - init > time) {
       if (persist) { // if it should keep going
         okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
-        while (allMotors.getEfficiency() < 25) {
+        while ((allMotors.getEfficiency() < 50 && abs(chassisPidValue) > 0.3) ||  chassis->getState().x.convert(okapi::foot) > 2.3) {
           pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
           if (chassisPidValue > 0) {
             chassis->getModel()->tank(1, 1);
@@ -177,6 +177,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
             chassis->getModel()->tank(-1, -1);
           }
         }
+        chassis->getModel()->tank(0, 0);
       }
       break; // otherwise, just break normally
     }
@@ -258,8 +259,6 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     // chassis->getModel()->tank(chassisPidValue + chassisPidValue2*0.9, chassisPidValue - chassisPidValue2*0.9);
     rate.delay(100_Hz);
     }
-
-  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW); // switch back to speed
   chassisDrivePid.reset();
   chassisTurnPid.reset();
   chassisVisionPid.reset();
@@ -267,6 +266,13 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
   chassis->setState({chassis->getState().x, chassis->getState().y, getHeading(false) * okapi::degree});
   // std::cout << "target: " << copyX << ", " << copyY << "\n";
   // std::cout << "actual: " << chassis->getState().x.convert(okapi::foot) << ", " << chassis->getState().y.convert(okapi::foot) << "\n";
+  // if (persist) {
+  //   if (chassis->getState().x.convert(okapi::foot) > copyX + 1) {
+  //     jCurve(copyX, copyY, false, 0, 1, 1);
+  //   }
+  // }
+  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW); // switch back to speed
+
 }
 
 void relative(double x, double time) { // in feet, x is forward, y is sideways

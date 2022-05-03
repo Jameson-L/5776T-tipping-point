@@ -7,9 +7,7 @@
 
 // functions
 // we can add other versions if necessary
-void tilterToLift();
-void place();
-void tilt();
+void start();
 void untilt();
 
 void left();
