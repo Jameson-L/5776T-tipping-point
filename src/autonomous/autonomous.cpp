@@ -53,15 +53,7 @@ void untilt() {
 }
 
 void right() {
-  chassis->setState({0_ft, 0_ft});
-  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
-  pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
-  pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
-  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
-  pros::c::adi_digital_write(kPneumaticCoverPort, HIGH);
-  pros::Task highLift(highLiftTask);
-  state = 0;
-  pros::Task giveUpTask(giveUp);
+  start();
   jCurve(3.3, 0, true, 0, 1, 2, false, true);
   pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
   pros::delay(300);
@@ -91,45 +83,52 @@ void right() {
   relative(2, 0.3);
 }
 void rightOne() {
-  okapi::Timer timer;
   start();
   jCurve(3.3, 0, true, 0, 1, 2, false, true);
   pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
   pros::delay(300);
   state = 3;
   jCurve(1, 0, false, 0, 1, 2, true);
-  if (timer.millis().convert(okapi::second) < 7) {
-    imuTurnToAngle(-90);
-    relative(-1.8, 1);
-    // odomDriveToPoint(1, 1.8, false, 0, 1, 1);
-    pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
-    pros::delay(100);
-    state = 1;
-    jCurve(1, 0.7, true, 0, 1, 0.7);
-    imuTurnToAngle(0);
-    pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
-    powershare.controllerSet(-1);
-    jCurve(4.2, 0.7, true, 0, 0.5, 3);
-    powershare.controllerSet(0);
-    jCurve(0.2, 0.7, false, 0, 1, 2, true); // drive back
-    state = 0;
-  } else {
-    while (timer.millis().convert(okapi::second) < 14) {
-      pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
-      if (chassis->getState().x.convert(okapi::foot) > 0.5) {
-        chassis->getModel()->tank(-1, -1);
-      } else {
-        chassis->getModel()->tank(0, 0);
-      }
-    }
-  }
+  imuTurnToAngle(-90);
+  relative(-1.8, 1);
+  // odomDriveToPoint(1, 1.8, false, 0, 1, 1);
+  pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+  pros::delay(100);
+  state = 1;
+  jCurve(1, 0.7, true, 0, 1, 0.7);
+  imuTurnToAngle(0);
+  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
+  powershare.controllerSet(-1);
+  jCurve(4.2, 0.7, true, 0, 0.5, 3);
+  powershare.controllerSet(0);
+  jCurve(0.2, 0.7, false, 0, 1, 2, true); // drive back
+  state = 0;
 }
-void rightAllianceWP() {
+void rightMiddle() {
+  start();
+  jCurve(3, -2.3, true, 0, 1, 2.5, false, true);
+  pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
+  pros::delay(300);
+  state = 3;
+  jCurve(1, 0, false, 0, 1, 3, true);
+  imuTurnToAngle(-90);
+  relative(-1.8, 1);
+  // odomDriveToPoint(1, 1.8, false, 0, 1, 1);
+  pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
+  pros::delay(100);
+  state = 1;
+  jCurve(1, 0.7, true, 0, 1, 0.7);
+  imuTurnToAngle(0);
+  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
+  powershare.controllerSet(-1);
+  jCurve(4.2, 0.7, true, 0, 0.5, 3);
+  powershare.controllerSet(0);
+  jCurve(0.2, 0.7, false, 0, 1, 2, true); // drive back
+  state = 0;
 }
 void left() {
 }
 void leftOne() {
-  okapi::Timer timer;
   start();
   jCurve(3.5, 0.75, true, 0.1, 1, 2, false, true);
   pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
@@ -148,11 +147,4 @@ void leftOne() {
   jCurve(1.6, 2, false, 0, 1, 2, true);
   state = 0;
   imuTurnToAngle(90);
-}
-void leftCounter() {
-}
-void soloAWP() {
-}
-void skills() {
-  // LMAO LMAO LMAO LMAO LMAO
 }

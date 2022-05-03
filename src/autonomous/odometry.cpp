@@ -163,18 +163,24 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
 
   okapi::Timer timer;
   double init = timer.millis().convert(okapi::second);
+  okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 
   while (!(abs(target - encoderReading) < 0.25 && !isMoving())) {
     chassis->setState({chassis->getState().x, chassis->getState().y, getHeading(false) * okapi::degree});
     if (timer.millis().convert(okapi::second) - init > time) {
       if (persist) { // if it should keep going
-        okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
-        while ((allMotors.getEfficiency() < 50 && abs(chassisPidValue) > 0.3) ||  chassis->getState().x.convert(okapi::foot) > 2.3) {
+        if ((allMotors.getEfficiency() < 50 && abs(chassisPidValue) > 0.3) ||  chassis->getState().x.convert(okapi::foot) > 2.3) {
           pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
-          if (chassisPidValue > 0) {
-            chassis->getModel()->tank(1, 1);
-          } else {
-            chassis->getModel()->tank(-1, -1);
+          while (true) {
+            if (chassis->getState().x.convert(okapi::foot) > 0) {
+              if (chassisPidValue > 0) {
+                chassis->getModel()->tank(1, 1);
+              } else {
+                chassis->getModel()->tank(-1, -1);
+              }
+            } else {
+              chassis->getModel()->tank(0, 0);
+            }
           }
         }
         chassis->getModel()->tank(0, 0);

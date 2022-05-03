@@ -12,11 +12,6 @@ void untilt();
 
 void left();
 void leftOne();
-void leftCounter();
 void right();
 void rightOne();
-void rightAllianceWP();
-void soloAWP();
-
-// skills runs
-void skills();
+void rightMiddle();
