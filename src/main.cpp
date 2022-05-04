@@ -58,7 +58,7 @@ void initialize() {
 	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
 	pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
 	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
-	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+	pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 
 	// while (imu1.isCalibrating() || imu1.isCalibrating()) {
@@ -124,10 +124,11 @@ void autonomous() {
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 	// right();
-	rightOne();
+	// rightOne();
+	// rightMiddle();
 	// rightAllianceWP();
 	// left();
-	// leftOne();
+	leftOne();
 	// leftCounter();
 	// soloAWP();
 	//
@@ -204,7 +205,7 @@ void opcontrol() {
 		pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
 		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 	}
-	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+	pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 
 	// to stop auton tasks
@@ -442,10 +443,10 @@ void opcontrol() {
 		chassis->getModel()->tank(leftY, rightY);
 
 		if (holdDrive) {
-			pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
+			pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 			allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 		} else {
-			pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+			pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
 			allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 		}
 

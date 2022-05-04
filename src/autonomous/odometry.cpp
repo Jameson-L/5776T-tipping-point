@@ -170,22 +170,21 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     if (timer.millis().convert(okapi::second) - init > time) {
       if (persist) { // if it should keep going
         if ((allMotors.getEfficiency() < 50 && abs(chassisPidValue) > 0.3) ||  chassis->getState().x.convert(okapi::foot) > 2.3) {
-          pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
+          pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+          chassis->getModel()->tank(0, 0);
           while (true) {
-            if (chassis->getState().x.convert(okapi::foot) > 0) {
-              if (chassisPidValue > 0) {
-                chassis->getModel()->tank(1, 1);
-              } else {
-                chassis->getModel()->tank(-1, -1);
-              }
+            if (chassis->getState().x.convert(okapi::foot) > 1.5) {
+              chassis->getModel()->tank(-1, -1); // only backwards for now
             } else {
               chassis->getModel()->tank(0, 0);
             }
+            rate.delay(20_Hz);
           }
+          chassis->getModel()->tank(0, 0);
         }
-        chassis->getModel()->tank(0, 0);
+      } else {
+        break; // otherwise, just break normally
       }
-      break; // otherwise, just break normally
     }
     if (rush) {
       if (/*bumper.isPressed() || */(abs(target - encoderReading) < 0.25)) {
@@ -261,7 +260,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     //   modified = 1;
     // }
 
-    chassis->getModel()->tank(modified + chassisPidValue2*0.9*abs(modified), modified - chassisPidValue2*0.9*abs(modified));
+    chassis->getModel()->tank(modified + chassisPidValue2*0.8*abs(modified), modified - chassisPidValue2*0.8*abs(modified));
     // chassis->getModel()->tank(chassisPidValue + chassisPidValue2*0.9, chassisPidValue - chassisPidValue2*0.9);
     rate.delay(100_Hz);
     }
@@ -277,7 +276,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
   //     jCurve(copyX, copyY, false, 0, 1, 1);
   //   }
   // }
-  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW); // switch back to speed
+  pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH); // switch back to speed
 
 }
 
