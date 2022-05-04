@@ -1,5 +1,6 @@
 #include "subsystems/chassis.hpp"
 #include "autonomous/odometry.hpp"
+#include "subsystems/highLift.hpp"
 
 using namespace okapi::literals;
 
@@ -172,8 +173,9 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
         if ((allMotors.getEfficiency() < 50 && abs(chassisPidValue) > 0.3) ||  chassis->getState().x.convert(okapi::foot) > 2.3) {
           pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
           chassis->getModel()->tank(0, 0);
-          while (true) {
-            if (chassis->getState().x.convert(okapi::foot) > 1.5) {
+          state = 0;
+          while (continueHighLift) { // used to be true 
+            if (chassis->getState().x.convert(okapi::foot) > 0.7) { // used to be 1.5
               chassis->getModel()->tank(-1, -1); // only backwards for now
             } else {
               chassis->getModel()->tank(0, 0);

@@ -57,7 +57,7 @@ pneumatic pain:
 kPneumaticClampPort 7 is on expander (HIGH is clamp, LOW is unclamp)
 kPneumaticTilterPort 1 is not (clamp of tilter) (HIGH is clamp, LOW is unclamp)
 kPneumaticTilterPort2 6 is on expander (tilt of tilter) (HIGH is tilt, LOW is untilt)
-kPneumaticTransmissionPort 3 is not (HIGH is torque, LOW is speed)
+kPneumaticTransmissionPort 3 is not (HIGH is speed, LOW is torque)
 kPneumaticCoverPort 4 is not (HIGH is down, LOW is up)
 
 example usage:

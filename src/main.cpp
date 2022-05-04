@@ -124,11 +124,11 @@ void autonomous() {
 	okapi::MotorGroup allMotors({kDriveLTPort, kDriveLMPort, kDriveLBPort, kDriveRBPort, kDriveRMPort, kDriveRTPort});
 	allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 	// right();
-	// rightOne();
+	rightOne();
 	// rightMiddle();
 	// rightAllianceWP();
 	// left();
-	leftOne();
+	// leftOne();
 	// leftCounter();
 	// soloAWP();
 	//
