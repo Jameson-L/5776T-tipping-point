@@ -171,10 +171,10 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
     if (timer.millis().convert(okapi::second) - init > time) {
       if (persist) { // if it should keep going
         if ((allMotors.getEfficiency() < 50 && abs(chassisPidValue) > 0.3) ||  chassis->getState().x.convert(okapi::foot) > 2.3) {
-          pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+          pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
           chassis->getModel()->tank(0, 0);
           state = 0;
-          while (continueHighLift) { // used to be true 
+          while (continueHighLift) { // used to be true
             if (chassis->getState().x.convert(okapi::foot) > 0.7) { // used to be 1.5
               chassis->getModel()->tank(-1, -1); // only backwards for now
             } else {
@@ -183,6 +183,8 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
             rate.delay(20_Hz);
           }
           chassis->getModel()->tank(0, 0);
+        } else {
+          break;
         }
       } else {
         break; // otherwise, just break normally
@@ -278,7 +280,7 @@ void jCurve(double x, double y, bool forward, double offset, double speedMultipl
   //     jCurve(copyX, copyY, false, 0, 1, 1);
   //   }
   // }
-  pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH); // switch back to speed
+  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW); // switch back to speed
 
 }
 

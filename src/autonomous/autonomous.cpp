@@ -37,11 +37,22 @@ void giveUp() {
 }
 void start() {
   chassis->setState({0_ft, 0_ft});
-  pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
+  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
   pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
   pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
   pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
   pros::c::adi_digital_write(kPneumaticCoverPort, HIGH);
+  pros::Task highLift(highLiftTask);
+  state = 0;
+  pros::Task giveUpTask(giveUp);
+}
+void start2() {
+  chassis->setState({0_ft, 0_ft});
+  pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+  pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
+  pros::c::ext_adi_digital_write(2, kPneumaticClampPort, LOW);
+  pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
+  pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
   pros::Task highLift(highLiftTask);
   state = 0;
   pros::Task giveUpTask(giveUp);
@@ -88,9 +99,9 @@ void rightOne() {
   pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
   pros::delay(300);
   state = 3;
-  jCurve(1.4, 0, false, 0, 1, 1.7, true);
+  jCurve(1.1, 0, false, 0, 1, 1.5, true);
   imuTurnToAngle(-90);
-  relative(-1.6, 1);
+  relative(-1.8, 1);
   // odomDriveToPoint(1, 1.8, false, 0, 1, 1);
   pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
   pros::delay(100);
@@ -129,13 +140,14 @@ void rightMiddle() {
 void left() {
 }
 void leftOne() {
-  start();
-  jCurve(3.7, 0.9, true, 0, 1, 2, false, true);
+  start2();
+  pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
+  jCurve(3.9, 0.8, true, 0.3, 1, 1.8, false, true);
   pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
   pros::delay(300);
   state = 3;
-  jCurve(0, 0, false, 0, 1, 1.7, true);
-  odomDriveToPoint(0.05, 1.4, false, 0, 1, 1);
+  jCurve(-0.3, 0, false, 0, 1, 1.6, true);
+  odomDriveToPoint(-0.6, 1.4, false, 0, 1, 1);
   pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
   pros::delay(100);
   pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
@@ -147,4 +159,11 @@ void leftOne() {
   jCurve(1.6, 2, false, 0, 1, 2, true);
   state = 0;
   imuTurnToAngle(90);
+}
+void knockMiddle() {
+  start();
+  state = 1;
+  jCurve(3.5, 0, true, 0, 1, 1.5, false, true);
+  jCurve(5.5, -3, true, 0, 1, 2, false, true);
+  // imuTurnToAngle(-45);
 }

@@ -58,7 +58,7 @@ void initialize() {
 	pros::c::ext_adi_digital_write(2, kPneumaticClampPort, HIGH);
 	pros::c::adi_digital_write(kPneumaticTilterPort, HIGH);
 	pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, HIGH);
-	pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
+	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 
 	// while (imu1.isCalibrating() || imu1.isCalibrating()) {
@@ -130,6 +130,7 @@ void autonomous() {
 	// left();
 	// leftOne();
 	// leftCounter();
+	// knockMiddle();
 	// soloAWP();
 	//
 	// skills();
@@ -205,7 +206,7 @@ void opcontrol() {
 		pros::c::adi_digital_write(kPneumaticTilterPort, LOW);
 		pros::c::ext_adi_digital_write(2, kPneumaticTilterPort2, LOW);
 	}
-	pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
+	pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 	pros::c::adi_digital_write(kPneumaticCoverPort, LOW);
 
 	// to stop auton tasks
@@ -222,6 +223,8 @@ void opcontrol() {
 
 		// printing odometry tests
 		// okapi::OdomState pos = chassis->getState();
+		// pros::lcd::set_text(1, std::to_string(pos.x.convert(okapi::foot)));
+
 		// std::cout << "left: " << LTrackingWheel.controllerGet() << '\n';
 		// std::cout << "right: " << RTrackingWheel.controllerGet() << '\n';
 		// std::cout << "middle: " << MTrackingWheel.controllerGet() << '\n';
@@ -238,7 +241,7 @@ void opcontrol() {
 			// std::cout << vision.get_by_size(0).x_middle_coord << " " << vision.get_by_size(0).y_middle_coord << "\n";
 		// }
 
-		// std::cout << "lowLiftPot: " << lowLiftPot.controllerGet() << '\n';
+		// std::cout << "lowLiftPot: " << powersharePot.controllerGet() << '\n';
 		// std::cout << "highLiftPot: " << highLiftFilter.filter(highLiftLPot.controllerGet())  << '\n';
 
 		// std::cout << "x: " << vision.get_by_size(0).x_middle_coord << "\n";
@@ -424,7 +427,7 @@ void opcontrol() {
 					powershare.controllerSet(-1);
 				} else if (powershareToggle == 3){
 					powershare.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-					if (powersharePot.controllerGet() > powershareTarget2+120) { // tune this number maybe
+					if (powersharePot.controllerGet() > powershareTarget2+140) { // tune this number maybe
 						powershare.controllerSet(-1);
 					} else {
 						powershare.controllerSet(0);
@@ -443,14 +446,16 @@ void opcontrol() {
 		chassis->getModel()->tank(leftY, rightY);
 
 		if (holdDrive) {
-			pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
+			pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
 			allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
 		} else {
-			pros::c::adi_digital_write(kPneumaticTransmissionPort, HIGH);
+			pros::c::adi_digital_write(kPneumaticTransmissionPort, LOW);
 			allMotors.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 		}
 
 		// lowLiftOff = true;
+		// lowLiftOff = true;
+		// highLift.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 		highLift.controllerSet(highLiftPidValue);
 
 		rate.delay(100_Hz);

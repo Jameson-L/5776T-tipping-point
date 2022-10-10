@@ -12,11 +12,12 @@ const int8_t kHighLiftLPotPort = 5; // 1
 // const int8_t kHighLiftRPotPort = 1;
 
 // position targets
-const double kHighLiftDownTarget = 260; // 0
-const double kHighLiftHoldTarget = 470; // 3
-const double kHighLiftUpTarget = 1475; // 2
-const double kHighLiftMaxTarget = 1475; // 4
-const double kHighLiftMidTarget = 800; // 1
+//733
+const double kHighLiftDownTarget = 993; // 0
+const double kHighLiftHoldTarget = 1203; // 3
+const double kHighLiftUpTarget = 2208; // 2
+const double kHighLiftMaxTarget = 2208; // 4
+const double kHighLiftMidTarget = 1533; // 1
 
 // motors
 // okapi::Motor highLiftLMotor;
